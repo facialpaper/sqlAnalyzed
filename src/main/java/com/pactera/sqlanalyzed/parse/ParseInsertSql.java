@@ -5,6 +5,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.insert.Insert;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.SelectBody;
+import net.sf.jsqlparser.statement.select.SelectItem;
+import net.sf.jsqlparser.statement.select.SetOperationList;
+import net.sf.jsqlparser.statement.select.WithItem;
+
+import org.springframework.util.CollectionUtils;
+
 import com.pactera.sqlanalyzed.entity.ColumnNode;
 import com.pactera.sqlanalyzed.entity.ResultRelationshp;
 import com.pactera.sqlanalyzed.entity.TableNode;
@@ -54,11 +67,98 @@ public class ParseInsertSql {
 	 * @param sqlText
 	 * @return 
 	 * 返回值：Set<ResultRelationshp>
+	 * @throws JSQLParserException 
 	 */
-	public Set<ResultRelationshp> parse(String syscode,String schema,String proName,String sqlText){
-		
-		
+	public Set<ResultRelationshp> parse(String syscode,String schema,String proName,String sqlText) throws JSQLParserException{
+		Insert insert = (Insert) CCJSqlParserUtil.parse(sqlText);
+		targetTable.setSchema(insert.getTable().getSchemaName());
+		targetTable.setTableName(insert.getTable().getName());
+		dealWithColumns(insert.getColumns());
+		prepareParseInsert(insert);
+		beginParseInsert(insert);
 		return null;
+	}
+
+	/**
+	 * 
+	 * 方法说明：将目标字段存储起来
+	 * 方法名：dealWithColumns
+	 * @param insert 
+	 * 返回值：void
+	 */
+	private void dealWithColumns(List<Column> columns) {
+		
+		System.out.println("一共"+columns.size()+"字段");
+		for (Column column : columns) {
+			ColumnNode columnNode = new ColumnNode();
+			columnNode.setColumnName(column.getColumnName());
+			insertColumns.add(columnNode);
+		}
+	}
+
+	/**
+	 * 
+	 * 方法说明：开始解析sql
+	 * 方法名：beginParseInsert
+	 * @param insert 
+	 * 返回值：void
+	 */
+	private void beginParseInsert(Insert insert) {
+		SelectBody sts = insert.getSelect().getSelectBody();
+		if(sts instanceof PlainSelect){
+			parsePlainSelect((PlainSelect)sts);
+		}else if(sts instanceof SetOperationList){//包含union all 
+			
+		}
+	}
+
+	/**
+	 * 
+	 * 方法说明：解析plainselect语句
+	 * 方法名：parsePlainSelect
+	 * @param sts 
+	 * 返回值：void
+	 */
+	private void parsePlainSelect(PlainSelect sts) {
+		
+		//处理select字段
+		dealWithSelectItems(sts);
+		
+		
+		System.out.println("-----------");
+	}
+
+	/**
+	 * 
+	 * 方法说明：处理查询字段
+	 * 方法名：dealWithSelectItems
+	 * @param sts 
+	 * 返回值：void
+	 */
+	private void dealWithSelectItems(PlainSelect sts) {
+		if(sts.toString().contains("SELECT *")){
+			System.out.println("从数据库中查找字段");
+			return;
+		}
+		List<SelectItem> selects = sts.getSelectItems();
+		int i=0;
+		for (SelectItem selectItem : selects) {
+			
+		}
+	}
+
+	/**
+	 * 
+	 * 方法说明：准备解析
+	 * 方法名：preparePareseInsert
+	 * @param sqlText 
+	 * 返回值：void
+	 */
+	private void prepareParseInsert(Insert insert) {
+		if(CollectionUtils.isEmpty(insert.getSelect().getWithItemsList())){
+			return;
+		}
+		List<WithItem> withItemsList = insert.getSelect().getWithItemsList();
 	}
 	
 }

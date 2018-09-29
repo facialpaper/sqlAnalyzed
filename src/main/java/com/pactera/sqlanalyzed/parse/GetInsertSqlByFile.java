@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.sf.jsqlparser.JSQLParserException;
+
 import org.apache.commons.io.IOUtils;
+
 
 
 
@@ -95,8 +98,9 @@ public class GetInsertSqlByFile {
 	 * 方法说明：得到insert语句
 	 * 方法名：GetInsertSqlByReg 
 	 * 返回值：void
+	 * @throws JSQLParserException 
 	 */
-	public  void GetInsertSqlByReg(){
+	public  void GetInsertSqlByReg() throws JSQLParserException{
 		if(Check.isEmpty(sqlText)){
 			System.out.println("存储过程为空");
 			return;
@@ -121,7 +125,12 @@ public class GetInsertSqlByFile {
         String path = "G:/procedure_path/EDWTST-STAS_ETL-SP_S_03_CORP_LOAN_DUBIL.txt";
         GetInsertSqlByFile gisbf = new GetInsertSqlByFile();
         gisbf.GetProcedureByFile(path);
-        gisbf.GetInsertSqlByReg();
+        try {
+			gisbf.GetInsertSqlByReg();
+		} catch (JSQLParserException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }
